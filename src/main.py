@@ -1,6 +1,5 @@
 import argparse
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, default = None, help='directory of asm file to be translated')
