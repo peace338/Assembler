@@ -1,0 +1,1 @@
+python -m src.main "D:\0_PARA\0_Projects\n2t\nand2tetris\projects\6\add\Add.asm"

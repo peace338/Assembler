@@ -1,18 +1,26 @@
 from .CommandType import CommandType
-
-
+import os
+import sys
 class Parser():
     def __init__(self, input_path: str):
         """
         Opens the input file/stream and gets ready to parse it.
         """
-        pass
+        self.__validateInput(input_path)
+        self.__file = open(input_path, 'r')
+        self.__fileSize = os.path.getsize(input_path)
+        self.currentCommand = None
+        self.currentCommandCommandType = None
 
-    def hasMoreCommands(self,) -> bool:
+    def __del__(self):
+        if self.__file:
+            self.__file.close()
+
+    def hasMoreCommands(self) -> bool:
         """
         Are there more commands in the input?
         """
-        pass
+        return self.__file.tell() < self.__fileSize
 
     def advance(self):
         """
@@ -20,7 +28,13 @@ class Parser():
         Should be called only if hasMoreCommands() is true.
         Initially there is no current command.
         """
-        pass
+
+        while self.hasMoreCommands():
+            
+            buffer = self.__file.readline()
+            if self.__isCommand(buffer):
+                self.currentCommand = buffer.rstrip("\n")
+                break
 
     def commandType(self) -> CommandType:
         """
@@ -29,14 +43,24 @@ class Parser():
         - C_COMMAND for dest=comp;jump
         - L_COMMAND (actually, pseudocommand) for (Xxx) where Xxx is a symbol.
         """
-        pass
+
+
+
+        # striped_line = self.currentCommand.lstrip() if self.currentCommand else None
+        # if striped_line:
+
+        #     case "@":
+        #         return CommandType.A_COMMAND
+        #     case "(":
+        #         return CommandType.L_COMMAND
+        #     case "//"
 
     def symbol(self) -> str:
         """
         Returns the symbol or decimal Xxx of the current command @Xxx or (Xxx). 
         Should be called only when commandType() is A_COMMAND or L_COMMAND.
         """
-        pass
+
 
     def dest(self) -> str:
         """
@@ -58,3 +82,15 @@ class Parser():
         Should be called only when commandType() is C_COMMAND.
         """
         pass
+
+    def __validateInput(self, input_path: str): 
+
+        if os.path.exists(input_path):
+            pass
+        else:
+            print("The file does not exist in the {}".format(input_path), file=sys.stderr)
+            sys.exit(1) 
+
+    def __isCommand(self, line: str) -> bool:
+
+        return False if line.lstrip().startswith("//") or line.isspace() else True

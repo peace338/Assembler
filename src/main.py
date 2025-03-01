@@ -1,4 +1,5 @@
 import argparse
+from .Parser.Parser import Parser
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -8,7 +9,10 @@ def parse_args() -> argparse.Namespace:
 
 def main(args: argparse.Namespace):
 
-    print(args.input)
+    parser = Parser(args.input)
+    while parser.hasMoreCommands():
+        parser.advance()
+        print(parser.currentCommand)
         
 if __name__ == "__main__":
     args = parse_args()
