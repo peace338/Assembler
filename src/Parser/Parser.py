@@ -1,6 +1,7 @@
 from .CommandType import CommandType
 import os
 import sys
+import re
 class Parser():
     def __init__(self, input_path: str):
         """
@@ -10,7 +11,7 @@ class Parser():
         self.__file = open(input_path, 'r')
         self.__fileSize = os.path.getsize(input_path)
         self.currentCommand = None
-        self.currentCommandCommandType = None
+        self.currentCommandType = None
 
     def __del__(self):
         if self.__file:
@@ -34,6 +35,7 @@ class Parser():
             buffer = self.__file.readline()
             if self.__isCommand(buffer):
                 self.currentCommand = buffer.rstrip("\n")
+                self.currentCommandType = self.commandType()
                 break
 
     def commandType(self) -> CommandType:
@@ -44,44 +46,67 @@ class Parser():
         - L_COMMAND (actually, pseudocommand) for (Xxx) where Xxx is a symbol.
         """
 
-
-
-        # striped_line = self.currentCommand.lstrip() if self.currentCommand else None
-        # if striped_line:
-
-        #     case "@":
-        #         return CommandType.A_COMMAND
-        #     case "(":
-        #         return CommandType.L_COMMAND
-        #     case "//"
+        if self.currentCommand.startswith("@"):
+            return CommandType.A_COMMAND
+        
+        elif self.currentCommand.startswith("(") and self.currentCommand.endswith(")"):
+            return CommandType.L_COMMAND
+        
+        else:
+            return CommandType.C_COMMAND
 
     def symbol(self) -> str:
         """
         Returns the symbol or decimal Xxx of the current command @Xxx or (Xxx). 
         Should be called only when commandType() is A_COMMAND or L_COMMAND.
         """
-
-
+        if self.currentCommandType == CommandType.A_COMMAND:
+            return self.currentCommand[1:]
+        elif self.currentCommandType == CommandType.L_COMMAND:
+            return self.currentCommand[1:-1]
+        
     def dest(self) -> str:
         """
         Returns the dest mnemonic in the current C-command (8 possibilities). 
         Should be called only when commandType() is C_COMMAND
         """
-        pass
+        if "=" in self.currentCommand:
+            retVal = self.currentCommand.split("=")[0]
+        else:
+            retVal = 'null'
+
+        return retVal
 
     def comp(self) -> str:
         """
         Returns the comp mnemonic in the current C-command (28 possibilities). 
         Should be called only when commandType() is C_COMMAND.
         """
-        pass
+        hasEq = "=" in self.currentCommand
+        hasSemi = ";" in self.currentCommand
+        if hasEq and hasSemi:
+            retVal = self.currentCommand.split("=")[-1].split(";")[0]
+        elif hasEq:
+            retVal = self.currentCommand.split("=")[-1]
+        elif hasSemi:
+            retVal = self.currentCommand.split(";")[0]
+        else:
+            print("C_COMMAND must have `=` or `;`.")
+            sys.exit(1)
+        
+        return retVal
 
     def jump(self) -> str:
         """
         Returns the jump mnemonic in the current C-command (8 possibilities). 
         Should be called only when commandType() is C_COMMAND.
         """
-        pass
+        if ";" in self.currentCommand:
+            retVal = self.currentCommand.split("=")[-1]
+        else:
+            retVal = 'null'
+
+        return retVal
 
     def __validateInput(self, input_path: str): 
 
