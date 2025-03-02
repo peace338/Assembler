@@ -10,7 +10,7 @@ class Parser():
         Opens the input file/stream and gets ready to parse it.
         """
         self.__validateInput(input_path)
-        self._file = open(input_path, 'r')
+        self._file = open(input_path, 'rb')
         self._fileSize = os.path.getsize(input_path)
         self.currentCommand = None
         self.currentCommandType = None
@@ -35,10 +35,10 @@ class Parser():
         logger.debug("Parser.advance() is called.")
         
         while self.hasMoreCommands():
-            # breakpoint()
+
             logger.debug("filePointer before readline: {}/{}".format(self._file.tell(),self._fileSize))
-            buffer = self._file.readline()
-            logger.debug("read line: {} \t|size: {}".format(buffer, len(buffer)))
+            buffer = self._file.readline().decode("utf-8")
+            logger.debug("read line: {} \t|size: {}".format(repr(buffer), len(buffer)))
             logger.debug("file pointer after readline: {}/{}".format(self._file.tell(), self._fileSize))
 
             if self.__isCommand(buffer):
@@ -132,6 +132,7 @@ class Parser():
             sys.exit(1) 
 
     def __isCommand(self, line: str) -> bool:
+
         isComment = line.lstrip().startswith("//")
         isSpace = line.isspace()
 
