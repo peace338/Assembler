@@ -75,12 +75,13 @@ def main(args: argparse.Namespace):
                 retCode |= int(symbol)  
             else:
                 if not symbolTable.contains(symbol):
-                    symbolTable.addEntry(symbol, parser.getLineCount())
+                    symbolTable.addEntry(symbol, parser.getAddrCount())
+                    parser.addrCount()
                 retCode |= symbolTable.getAddress(symbol)
             logger.info("{}: {:016b}".format(parser.currentCommandType, retCode))
 
             exporter.writeCode(retCode)
-            
+
         elif parser.currentCommandType == CommandType.L_COMMAND:
             pass
         else:
