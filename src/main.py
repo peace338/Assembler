@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import sys
 
 from .Parser.Parser import Parser
 from .Parser.CommandType import CommandType
@@ -15,7 +16,8 @@ def parse_args() -> argparse.Namespace:
 
 def main(args: argparse.Namespace):
 
-    logger.info("Starting assembler program")
+    logger.debug("Starting assembler program")
+    logger.debug("input: {}".format(args.input))
 
     parser = Parser(args.input)
     code = Code()
@@ -23,27 +25,31 @@ def main(args: argparse.Namespace):
 
     while parser.hasMoreCommands():
         parser.advance()
+        logger.debug("Type: {} \t|currentCommand: {}".format(parser.currentCommandType, parser.currentCommand))
         retCode = 0b0000000000000000
         if parser.currentCommandType == CommandType.C_COMMAND:
             jumpInst = parser.jump()
             destInst = parser.dest()
             compInst = parser.comp()
 
+            logger.debug("{}: {}={};{}".format(parser.currentCommandType, 
+                                            destInst,
+                                            compInst,
+                                            jumpInst))
+            
             retCode |= 0b111<<13
             retCode |= code.jump(jumpInst)<<0
             retCode |= code.dest(destInst)<<3
             retCode |= code.comp(compInst)<<6
 
-            logger.info("{}: {}={};{} ->{:016b}".format(parser.currentCommandType, 
-                                            destInst,
-                                            compInst,
-                                            jumpInst,
-                                            retCode))
+            logger.info("{}: {:016b}".format(parser.currentCommandType, retCode))
     
-        else:
+        elif parser.currentCommandType == CommandType.A_COMMAND or parser.currentCommandType == CommandType.L_COMMAND:
             retCode |= int(parser.symbol())  
             logger.info("{}: {:016b}".format(parser.currentCommandType, retCode))
-
+        else:
+            logger.fatal("parser.currentCommandType has wrong type. not expected.")
+            sys.exit(1)
         exporter.writeCode(retCode)
 
 if __name__ == "__main__":
@@ -51,7 +57,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(filename='main.log',
                     filemode='w',
-                    level=logging.DEBUG)
+                    level=logging.DEBUG,
+                    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s")
     logger = logging.getLogger(__name__)
 
     main(args)

@@ -23,6 +23,7 @@ class Parser():
         """
         Are there more commands in the input?
         """
+        logger.debug("file pointer: {}/{}".format(self.__file.tell(), self.__fileSize))
         return self.__file.tell() < self.__fileSize
 
     def advance(self):
@@ -31,11 +32,13 @@ class Parser():
         Should be called only if hasMoreCommands() is true.
         Initially there is no current command.
         """
-
+        logger.debug("Parser.advance() is called.")
+        
         while self.hasMoreCommands():
-            
             buffer = self.__file.readline()
+            logger.debug("read line: {}".format(buffer))
             if self.__isCommand(buffer):
+                logger.debug("peak command: {}".format(buffer))
                 self.currentCommand = buffer.rstrip("\n")
                 self.currentCommandType = self.commandType()
                 break
@@ -60,6 +63,9 @@ class Parser():
         Returns the symbol or decimal Xxx of the current command @Xxx or (Xxx). 
         Should be called only when commandType() is A_COMMAND or L_COMMAND.
         """
+
+        logger.debug("call Parser.symbol()")
+        logger.debug("currentCommand: {}".format(self.currentCommandType))
         if self.currentCommandType == CommandType.A_COMMAND:
             return self.currentCommand[1:]
         elif self.currentCommandType == CommandType.L_COMMAND:
@@ -84,6 +90,10 @@ class Parser():
         """
         hasEq = "=" in self.currentCommand
         hasSemi = ";" in self.currentCommand
+
+        logger.debug("export comp instruction")
+        logger.debug("hasEq: {}, hasSemi: {}".format(hasEq, hasSemi))
+
         if hasEq and hasSemi:
             retVal = self.currentCommand.split("=")[-1].split(";")[0]
         elif hasEq:
@@ -93,7 +103,8 @@ class Parser():
         else:
             logger.warning("C_COMMAND must have `=` or `;`.")
             sys.exit(1)
-        
+        logger.debug("comp: {}".format(retVal))
+
         return retVal
 
     def jump(self) -> str:
@@ -102,7 +113,7 @@ class Parser():
         Should be called only when commandType() is C_COMMAND.
         """
         if ";" in self.currentCommand:
-            retVal = self.currentCommand.split("=")[-1]
+            retVal = self.currentCommand.split(";")[-1]
         else:
             retVal = 'null'
 
