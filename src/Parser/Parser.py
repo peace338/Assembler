@@ -14,7 +14,8 @@ class Parser():
         self._fileSize = os.path.getsize(input_path)
         self.currentCommand = None
         self.currentCommandType = None
-
+        self._counter = 0
+        self._addressCounter = 16
     def __del__(self):
         if self._file:
             self._file.close()
@@ -42,8 +43,11 @@ class Parser():
             logger.debug("file pointer after readline: {}/{}".format(self._file.tell(), self._fileSize))
 
             if self.__isCommand(buffer):
-                logger.debug("peak command: {}".format(buffer))
-                self.currentCommand = buffer.rstrip("\n").rstrip()
+                logger.debug("before filtering command: {}".format(repr(buffer)))
+                buffer = buffer.rstrip("\n").rstrip()
+                buffer = buffer.lstrip()
+                self.currentCommand = buffer
+                logger.debug("after filtering command: {}".format(repr(self.currentCommand)))
                 self.currentCommandType = self.commandType()
                 break
 
@@ -54,7 +58,6 @@ class Parser():
         - C_COMMAND for dest=comp;jump
         - L_COMMAND (actually, pseudocommand) for (Xxx) where Xxx is a symbol.
         """
-
         if self.currentCommand.startswith("@"):
             return CommandType.A_COMMAND
         elif self.currentCommand.startswith("(") and self.currentCommand.endswith(")"):
@@ -144,3 +147,22 @@ class Parser():
             retVal = True
 
         return retVal
+    
+    def lineCount(self):
+        self._counter += 1
+    
+    def getLineCount(self) -> int:
+        return self._counter
+    
+    def addrCount(self):
+        self._addressCounter += 1
+    
+    def getAddrCount(self) -> int:
+        return self._addressCounter
+
+    def resetParser(self):
+        self._file.seek(0)
+        self.currentCommand = None
+        self.currentCommandType = None
+        self._counter = 0
+        self._addressCounter = 16

@@ -7,6 +7,7 @@ from .Parser.Parser import Parser
 from .Parser.CommandType import CommandType
 from .Code.Code import Code
 from .Export.Export import Export2Hack
+from .SymbolTable.SymbolTable import SymbolTable
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -22,11 +23,32 @@ def main(args: argparse.Namespace):
     parser = Parser(args.input)
     code = Code()
     exporter = Export2Hack(args.input)
-
+    symbolTable = SymbolTable()
+    logger.info("Starting first pass")
     while parser.hasMoreCommands():
+        
+        parser.advance()
+
+        if parser.currentCommandType == CommandType.L_COMMAND:   
+            logger.debug("CommandType.L_COMMAND is detected.")
+            symbol = parser.symbol()
+
+            if not symbolTable.contains(symbol):
+                symbolTable.addEntry(symbol, parser.getLineCount())
+
+            logger.debug("add {} with address {}.".format(symbol, parser.getLineCount()))
+        else:
+            parser.lineCount()
+
+    parser.resetParser()
+
+    logger.info("Starting second pass")
+    while parser.hasMoreCommands():      
+        
         parser.advance()
         logger.debug("Type: {} \t|currentCommand: {}".format(parser.currentCommandType, parser.currentCommand))
         retCode = 0b0000000000000000
+        
         if parser.currentCommandType == CommandType.C_COMMAND:
             jumpInst = parser.jump()
             destInst = parser.dest()
@@ -43,14 +65,28 @@ def main(args: argparse.Namespace):
             retCode |= code.comp(compInst)<<6
 
             logger.info("{}: {:016b}".format(parser.currentCommandType, retCode))
-    
-        elif parser.currentCommandType == CommandType.A_COMMAND or parser.currentCommandType == CommandType.L_COMMAND:
-            retCode |= int(parser.symbol())  
+            
+            exporter.writeCode(retCode)
+
+        elif parser.currentCommandType == CommandType.A_COMMAND:
+            symbol = parser.symbol()
+            logger.debug("parsed symbol: {}".format(symbol))
+            if symbol.isdigit():
+                retCode |= int(symbol)  
+            else:
+                if not symbolTable.contains(symbol):
+                    symbolTable.addEntry(symbol, parser.getLineCount())
+                retCode |= symbolTable.getAddress(symbol)
             logger.info("{}: {:016b}".format(parser.currentCommandType, retCode))
+
+            exporter.writeCode(retCode)
+            
+        elif parser.currentCommandType == CommandType.L_COMMAND:
+            pass
         else:
             logger.fatal("parser.currentCommandType has wrong type. not expected.")
             sys.exit(1)
-        exporter.writeCode(retCode)
+        
 
 if __name__ == "__main__":
     args = parse_args()
@@ -58,7 +94,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename='main.log',
                     filemode='w',
                     level=logging.DEBUG,
-                    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s")
+                    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d \n\t- %(message)s")
     logger = logging.getLogger(__name__)
 
     main(args)
