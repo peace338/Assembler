@@ -1,7 +1,9 @@
 from .CommandType import CommandType
 import os
 import sys
-import re
+import logging
+
+logger = logging.getLogger(__name__)
 class Parser():
     def __init__(self, input_path: str):
         """
@@ -48,10 +50,8 @@ class Parser():
 
         if self.currentCommand.startswith("@"):
             return CommandType.A_COMMAND
-        
         elif self.currentCommand.startswith("(") and self.currentCommand.endswith(")"):
             return CommandType.L_COMMAND
-        
         else:
             return CommandType.C_COMMAND
 
@@ -91,7 +91,7 @@ class Parser():
         elif hasSemi:
             retVal = self.currentCommand.split(";")[0]
         else:
-            print("C_COMMAND must have `=` or `;`.")
+            logger.warning("C_COMMAND must have `=` or `;`.")
             sys.exit(1)
         
         return retVal

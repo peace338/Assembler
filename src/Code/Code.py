@@ -1,3 +1,4 @@
+from .CodeTable import *
 class Code():
     def __init__(self):
         pass
@@ -6,18 +7,18 @@ class Code():
         """
         Returns the binary code of the dest mnemonic.
         """
-        pass
+        return destTable[mnemonic]
 
     def comp(self, mnemonic: str) -> int: #7bit
         """
         Returns the binary code of the comp mnemonic.
         """
-        pass
+        return compTable[mnemonic]
 
     def jump(self, mnemonic: str) -> int: #3bit
         """
         Returns the binary code of the jump mnemonic.
         """
-        pass
+        return jumpTable[mnemonic]
 
 
