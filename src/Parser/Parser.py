@@ -10,21 +10,21 @@ class Parser():
         Opens the input file/stream and gets ready to parse it.
         """
         self.__validateInput(input_path)
-        self.__file = open(input_path, 'r')
-        self.__fileSize = os.path.getsize(input_path)
+        self._file = open(input_path, 'r')
+        self._fileSize = os.path.getsize(input_path)
         self.currentCommand = None
         self.currentCommandType = None
 
     def __del__(self):
-        if self.__file:
-            self.__file.close()
+        if self._file:
+            self._file.close()
 
     def hasMoreCommands(self) -> bool:
         """
         Are there more commands in the input?
         """
-        logger.debug("file pointer: {}/{}".format(self.__file.tell(), self.__fileSize))
-        return self.__file.tell() < self.__fileSize
+        logger.debug("file pointer: {}/{}".format(self._file.tell(), self._fileSize))
+        return self._file.tell() < self._fileSize
 
     def advance(self):
         """
@@ -35,11 +35,15 @@ class Parser():
         logger.debug("Parser.advance() is called.")
         
         while self.hasMoreCommands():
-            buffer = self.__file.readline()
-            logger.debug("read line: {}".format(buffer))
+            # breakpoint()
+            logger.debug("filePointer before readline: {}/{}".format(self._file.tell(),self._fileSize))
+            buffer = self._file.readline()
+            logger.debug("read line: {} \t|size: {}".format(buffer, len(buffer)))
+            logger.debug("file pointer after readline: {}/{}".format(self._file.tell(), self._fileSize))
+
             if self.__isCommand(buffer):
                 logger.debug("peak command: {}".format(buffer))
-                self.currentCommand = buffer.rstrip("\n")
+                self.currentCommand = buffer.rstrip("\n").rstrip()
                 self.currentCommandType = self.commandType()
                 break
 
@@ -128,5 +132,14 @@ class Parser():
             sys.exit(1) 
 
     def __isCommand(self, line: str) -> bool:
+        isComment = line.lstrip().startswith("//")
+        isSpace = line.isspace()
 
-        return False if line.lstrip().startswith("//") or line.isspace() else True
+        if isComment or isSpace:
+            logger.debug("this line is not a command. [isComment, isSpace]: {}, {}".format(isComment, isSpace))
+            retVal = False
+        else:
+            logger.debug("this line is a command")
+            retVal = True
+
+        return retVal
